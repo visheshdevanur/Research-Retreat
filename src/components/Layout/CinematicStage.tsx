@@ -260,77 +260,46 @@ export const CinematicStage: React.FC<CinematicStageProps> = ({
         </div>
       )}
 
-      {/* TOP HEADER: Only visible on Phase A / B / C */}
+      {/* 4. MASTER 1080P PHASE A SCREEN (100% Matching Approved Reference) */}
       {(phase === 'PHASE_A_DORMANT' || phase === 'PHASE_B_APPROACH' || phase === 'PHASE_C_CONTACT') && (
-        <header className="relative z-30 pt-5 px-10 md:px-14 flex items-center justify-between pointer-events-none">
-          {/* Left: Original Circular MIT Mysore Logo */}
-          <div className="flex items-center">
-            <CircularEmblem
-              size="md"
-              src="/assets/logos/mitm-circular.png"
-              alt="Maharaja Institute of Technology Mysore"
-              glow
-            />
-          </div>
+        <div className="absolute inset-0 w-full h-full flex items-center justify-center select-none overflow-hidden z-20">
+          <img
+            src="/assets/phase_a_reference_screen.png"
+            alt="MRF Research Retreat 2026 Phase A Inauguration Ceremony"
+            className="w-full h-full object-contain pointer-events-none"
+          />
 
-          {/* Center: Editorial Event Typography */}
-          <div className="text-center flex flex-col items-center">
-            <span className="text-[11px] sm:text-xs font-cinematic font-semibold tracking-[0.4em] uppercase text-[#D6B56F] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
-              MAHARAJA RESEARCH FOUNDATION
-            </span>
-            <h2 className="text-2xl sm:text-3xl md:text-[34px] font-cinematic tracking-[0.22em] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#FFFFFF] via-[#F8FAFF] to-[#D6B56F] drop-shadow-[0_2px_18px_rgba(66,217,255,0.5)] my-0.5">
-              MRF RESEARCH RETREAT 2026
-            </h2>
-            <span className="text-[9px] sm:text-[10px] font-sans tracking-[0.48em] uppercase text-[#42D9FF] font-semibold drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
-              INAUGURATION CEREMONY
-            </span>
-          </div>
+          {/* Interactive touch/click trigger area over palm center */}
+          <div
+            onClick={() => onPhaseChange('PHASE_C_CONTACT')}
+            title="Click palm to activate inauguration"
+            className="absolute left-1/2 top-[52.6%] -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full cursor-pointer z-30 opacity-0"
+          />
 
-          {/* Right: Original Circular MRF Logo */}
-          <div className="flex items-center">
-            <CircularEmblem
-              size="md"
-              src="/assets/logos/mrf-circular.png"
-              alt="Maharaja Research Foundation"
-              glow
-            />
-          </div>
-        </header>
-      )}
-
-      {/* MAIN INTERACTION STAGE */}
-      <main className="relative z-20 flex-1 flex flex-col items-center justify-center w-full px-4 my-auto">
-        {(phase === 'PHASE_A_DORMANT' || phase === 'PHASE_B_APPROACH' || phase === 'PHASE_C_CONTACT') && (
-          <div className="flex flex-col items-center justify-center w-full max-w-4xl">
-            {/* Supporting Instruction Above Target */}
-            <div className="text-center mb-1 space-y-1.5 pointer-events-none animate-float">
-              <h1 className="text-2xl sm:text-3xl md:text-[34px] font-cinematic font-bold tracking-[0.16em] whitespace-nowrap text-[#F8FAFF] drop-shadow-[0_3px_20px_rgba(66,217,255,0.6)]">
-                CHIEF GUEST, PLEASE PLACE <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D6B56F] via-[#FFFFFF] to-[#D6B56F]">YOUR HAND</span>
-              </h1>
-              <div className="inline-flex items-center px-6 py-1 rounded-full border border-[#42D9FF]/40 bg-[#071633]/85 backdrop-blur-md shadow-[0_0_15px_rgba(66,217,255,0.25)]">
-                <p className="text-xs sm:text-sm font-sans tracking-[0.38em] text-[#42D9FF] font-medium uppercase">
-                  ALIGN YOUR PALM WITH THE ILLUMINATED AREA
-                </p>
-              </div>
-            </div>
-
-            {/* Central Circular Portal & Dimensional Holographic Glass Hand */}
-            <div className="relative w-full h-[470px] flex items-center justify-center">
-              <HolographicHandTarget
-                phase={phase}
-                trackingState={trackingState}
-                contactFingerIndex={contactFingerIndex}
-                onTargetClick={() => onPhaseChange('PHASE_C_CONTACT')}
+          {/* Dynamic Biometric Charging Flare & Ring when palm is actively aligning */}
+          {trackingState.holdProgress > 0 && (
+            <div className="absolute left-1/2 top-[52.6%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30 transition-all duration-75 flex items-center justify-center">
+              <div
+                className="w-36 h-36 rounded-full border-4 border-[#D6B56F] shadow-[0_0_35px_#42D9FF,0_0_70px_#D6B56F] animate-spin"
+                style={{
+                  transform: `scale(${1 + trackingState.holdProgress * 0.2})`,
+                  opacity: 0.5 + trackingState.holdProgress * 0.5,
+                }}
+              />
+              <div
+                className="absolute w-20 h-20 rounded-full bg-gradient-to-r from-[#42D9FF] to-[#D6B56F] blur-md animate-pulse"
+                style={{
+                  transform: `scale(${1 + trackingState.holdProgress * 0.5})`,
+                  opacity: trackingState.holdProgress * 0.8,
+                }}
               />
             </div>
+          )}
+        </div>
+      )}
 
-            {/* Floating Architectural Stage Platform */}
-            <div className="relative -mt-4 w-full flex items-center justify-center z-10 pointer-events-none">
-              <StagePlatform intensity={trackingState.holdProgress} />
-            </div>
-          </div>
-        )}
-
+      {/* MAIN INTERACTION STAGE (Institutional reveals & final stage) */}
+      <main className="relative z-20 flex-1 flex flex-col items-center justify-center w-full px-4 my-auto">
         {phase === 'PHASE_E_MIT_REVEAL' && <MITMysoreReveal />}
         {phase === 'PHASE_E_MRF_REVEAL' && <MRFReveal />}
 
@@ -349,10 +318,12 @@ export const CinematicStage: React.FC<CinematicStageProps> = ({
         )}
       </main>
 
-      {/* BOTTOM FOOTER */}
-      <footer className="relative z-30 pb-4 px-8 flex flex-col items-center justify-center">
-        {renderBottomStatus()}
-      </footer>
+      {/* BOTTOM FOOTER (Live status progress when hand is detected/aligning) */}
+      {trackingState.holdProgress > 0 && (
+        <footer className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center justify-center">
+          {renderBottomStatus()}
+        </footer>
+      )}
 
       {/* Secret Hotspot for Operator Console (Triple click) */}
       <div

@@ -125,26 +125,6 @@ export const CinematicStage: React.FC<CinematicStageProps> = ({
     };
   }, [phase, onPhaseChange, settings]);
 
-  // Video sequence advance handlers based on actual HTML5 'ended' events
-  const handleVideo01Ended = useCallback(() => {
-    if (settings.video02Enabled && settings.video02Src) {
-      onPhaseChange('PHASE_VIDEO_02');
-    } else {
-      onPhaseChange('PHASE_F_FINAL');
-    }
-  }, [settings, onPhaseChange]);
-
-  const handleVideo02Ended = useCallback(() => {
-    onPhaseChange('PHASE_F_FINAL');
-  }, [onPhaseChange]);
-
-  const handleVideoError = useCallback(
-    (slotName: string, err: string) => {
-      console.warn(`Video playback issue on ${slotName}: ${err}.`);
-    },
-    []
-  );
-
   // Render bottom status indicator (only during opening stage)
   const renderBottomStatus = () => {
     if (
@@ -218,49 +198,6 @@ export const CinematicStage: React.FC<CinematicStageProps> = ({
     );
   };
 
-  // 1. VIDEO SEQUENCE RENDERING (FULLSCREEN, CLEAN, NO OVERLAYS)
-  if (phase === 'PHASE_VIDEO_01') {
-    return (
-      <>
-        <CinematicVideoPlayer
-          currentSlot="video_01"
-          videoSrc={settings.video01Src}
-          nextVideoSrc={settings.video02Enabled ? settings.video02Src : undefined}
-          audioPolicy={settings.videoAudioPolicy}
-          onEnded={handleVideo01Ended}
-          onError={(err) => handleVideoError('VIDEO_01', err)}
-        />
-        {/* Secret Hotspot for Operator Console during Video */}
-        <div
-          onClick={handleSecretClick}
-          title="Triple-click for Operator Console"
-          className="fixed bottom-0 left-0 w-8 h-8 opacity-0 hover:opacity-10 cursor-pointer z-50 pointer-events-auto"
-        />
-      </>
-    );
-  }
-
-  if (phase === 'PHASE_VIDEO_02') {
-    return (
-      <>
-        <CinematicVideoPlayer
-          currentSlot="video_02"
-          videoSrc={settings.video02Src}
-          audioPolicy={settings.videoAudioPolicy}
-          onEnded={handleVideo02Ended}
-          onError={(err) => handleVideoError('VIDEO_02', err)}
-        />
-        {/* Secret Hotspot for Operator Console during Video */}
-        <div
-          onClick={handleSecretClick}
-          title="Triple-click for Operator Console"
-          className="fixed bottom-0 left-0 w-8 h-8 opacity-0 hover:opacity-10 cursor-pointer z-50 pointer-events-auto"
-        />
-      </>
-    );
-  }
-
-  // 2. MAIN STAGE RENDERING (OPENING, BLAST, FINAL)
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#030718] text-[#F8FAFF] flex flex-col justify-between select-none">
       {/* Aurora Waves Background with Living Canvas Simulation */}
@@ -282,6 +219,16 @@ export const CinematicStage: React.FC<CinematicStageProps> = ({
 
       {/* Visual Effects Blast Engine */}
       <EnergyBlastVFX phase={phase} />
+
+      {/* Cinematic Dual-Channel Video Player with Broadcast Transitions */}
+      <CinematicVideoPlayer
+        phase={phase}
+        video01Src={settings.video01Src}
+        video02Src={settings.video02Src}
+        videoAudioPolicy={settings.videoAudioPolicy}
+        onPhaseChange={onPhaseChange}
+        onSecretClick={handleSecretClick}
+      />
 
       {/* Real-time Reticle for actual hand proximity */}
       {trackingState.detected && (phase === 'PHASE_A_DORMANT' || phase === 'PHASE_B_APPROACH') && (

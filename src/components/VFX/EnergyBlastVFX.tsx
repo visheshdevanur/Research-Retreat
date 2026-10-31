@@ -4,7 +4,7 @@ import { InaugurationPhase } from '../../types';
 
 interface EnergyBlastVFXProps {
   phase: InaugurationPhase;
-  origin?: { x: number; y: number }; // normalized coords, default (0.5, 0.53)
+  origin?: { x: number; y: number }; // normalized coords, default (0.5, 0.526)
 }
 
 interface Particle {
@@ -29,22 +29,25 @@ interface Shockwave {
   lineWidth: number;
   alpha: number;
   color: string;
+  glowColor: string;
 }
 
-interface Filament {
-  points: { x: number; y: number }[];
+interface QuantumCorePulse {
+  radius: number;
+  maxRadius: number;
   alpha: number;
-  color: string;
+  growthSpeed: number;
+  decaySpeed: number;
 }
 
 export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
   phase,
-  origin = { x: 0.5, y: 0.53 },
+  origin = { x: 0.5, y: 0.526 },
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const shockwavesRef = useRef<Shockwave[]>([]);
-  const filamentsRef = useRef<Filament[]>([]);
+  const corePulsesRef = useRef<QuantumCorePulse[]>([]);
   const animFrameId = useRef<number | null>(null);
   const contactFlashIntensity = useRef<number>(0);
   const blastFlashIntensity = useRef<number>(0);
@@ -58,64 +61,59 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
     const oy = canvas.height * origin.y;
 
     if (phase === 'PHASE_C_CONTACT') {
-      // 1. Palm Contact Flash
+      // 1. Palm Contact Flash Bloom (Pure White into 24K Gold & Electric Cyan)
       contactFlashIntensity.current = 1.0;
 
-      // 2. Contact Shockwaves (expanding blue, cyan, violet, and gold energy rings)
-      const contactColors = ['#42D9FF', '#7548FF', '#147BFF', '#D6B56F', '#FFFFFF'];
-      for (let i = 0; i < 5; i++) {
+      // 2. Solid Quantum Core Pulse (Bold circular energy core expanding outward)
+      corePulsesRef.current.push({
+        radius: 15,
+        maxRadius: 180,
+        alpha: 1.0,
+        growthSpeed: 9,
+        decaySpeed: 0.045,
+      });
+
+      // 3. Bold Concentric Harmonic Shockwaves (Solid, crisp circular energy rings)
+      // Strictly institutional palette: White, Cyan, Gold, Royal Blue
+      const contactWaveConfigs = [
+        { color: '#FFFFFF', glowColor: '#00E5FF', lineWidth: 7, speed: 9, delay: 0 },
+        { color: '#00E5FF', glowColor: '#147BFF', lineWidth: 6, speed: 12, delay: 90 },
+        { color: '#D4AF37', glowColor: '#FFF3C4', lineWidth: 8, speed: 15, delay: 180 },
+        { color: '#147BFF', glowColor: '#00E5FF', lineWidth: 5, speed: 18, delay: 270 },
+      ];
+
+      contactWaveConfigs.forEach((cfg) => {
         setTimeout(() => {
           shockwavesRef.current.push({
             x: ox,
             y: oy,
-            radius: 10,
-            maxRadius: Math.max(canvas.width, canvas.height) * 0.7,
-            speed: 8 + i * 3.5,
-            lineWidth: 5 - i * 0.7,
-            alpha: 0.95,
-            color: contactColors[i % contactColors.length],
+            radius: 20,
+            maxRadius: Math.max(canvas.width, canvas.height) * 0.75,
+            speed: cfg.speed,
+            lineWidth: cfg.lineWidth,
+            alpha: 1.0,
+            color: cfg.color,
+            glowColor: cfg.glowColor,
           });
-        }, i * 80);
-      }
+        }, cfg.delay);
+      });
 
-      // 3. Cyan, Electric Blue, Violet & Gold Spark Particles Burst
-      const sparkColors = ['#42D9FF', '#147BFF', '#7548FF', '#E34BBF', '#D6B56F', '#FFFFFF'];
-      for (let p = 0; p < 220; p++) {
+      // 4. Solid Coherent Energy Sparks (Strictly Gold, Cyan & White - NO chaotic rainbow colors)
+      const sparkColors = ['#00E5FF', '#D4AF37', '#FFFFFF', '#147BFF', '#FFE8A3'];
+      for (let p = 0; p < 140; p++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 3 + Math.random() * 16;
+        const speed = 4 + Math.random() * 14;
         particlesRef.current.push({
           x: ox,
           y: oy,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          size: 2 + Math.random() * 3.5,
+          size: 2.5 + Math.random() * 3,
           color: sparkColors[Math.floor(Math.random() * sparkColors.length)],
           alpha: 1.0,
-          decay: 0.015 + Math.random() * 0.02,
-          sparkle: Math.random() > 0.4,
+          decay: 0.018 + Math.random() * 0.02,
+          sparkle: Math.random() > 0.35,
           history: [],
-        });
-      }
-
-      // 4. Cyan & Violet Energy Filaments branching out
-      filamentsRef.current = [];
-      for (let f = 0; f < 8; f++) {
-        const points: { x: number; y: number }[] = [{ x: ox, y: oy }];
-        let curX = ox;
-        let curY = oy;
-        const branchAngle = (f / 8) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
-        const segLen = 35 + Math.random() * 25;
-
-        for (let s = 0; s < 7; s++) {
-          curX += Math.cos(branchAngle) * segLen + (Math.random() - 0.5) * 40;
-          curY += Math.sin(branchAngle) * segLen + (Math.random() - 0.5) * 40;
-          points.push({ x: curX, y: curY });
-        }
-
-        filamentsRef.current.push({
-          points,
-          alpha: 1.0,
-          color: f % 3 === 0 ? '#42D9FF' : f % 3 === 1 ? '#7548FF' : '#D6B56F',
         });
       }
     }
@@ -124,37 +122,45 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
       // Grand Inauguration Blast!
       blastFlashIntensity.current = 1.0;
 
-      // 1. Massive expanding full-screen shockwaves (Cyan, Violet, Gold, White)
-      const blastColors = ['#FFFFFF', '#42D9FF', '#7548FF', '#D6B56F', '#147BFF', '#E34BBF'];
+      // 1. Massive expanding full-screen solid shockwaves (Cyan, Gold, White)
+      const blastWaveConfigs = [
+        { color: '#FFFFFF', glowColor: '#00E5FF', lineWidth: 10, speed: 18, delay: 0 },
+        { color: '#D4AF37', glowColor: '#FFE8A3', lineWidth: 8, speed: 22, delay: 100 },
+        { color: '#00E5FF', glowColor: '#147BFF', lineWidth: 7, speed: 25, delay: 200 },
+        { color: '#F5C542', glowColor: '#D4AF37', lineWidth: 6, speed: 28, delay: 300 },
+      ];
+
       const maxScreenDim = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height);
-      for (let i = 0; i < 6; i++) {
+      blastWaveConfigs.forEach((cfg) => {
         setTimeout(() => {
           shockwavesRef.current.push({
             x: ox,
             y: oy,
-            radius: 20,
-            maxRadius: maxScreenDim * 1.15,
-            speed: 16 + i * 4,
-            lineWidth: 8 - i,
+            radius: 30,
+            maxRadius: maxScreenDim * 1.2,
+            speed: cfg.speed,
+            lineWidth: cfg.lineWidth,
             alpha: 1.0,
-            color: blastColors[i % blastColors.length],
+            color: cfg.color,
+            glowColor: cfg.glowColor,
           });
-        }, i * 110);
-      }
+        }, cfg.delay);
+      });
 
-      // 2. Huge explosive burst of 500+ luminous particles with long spark trails
-      for (let p = 0; p < 500; p++) {
+      // 2. High-density golden-cyan stellar burst (280 particles)
+      const blastSparkColors = ['#FFFFFF', '#00E5FF', '#D4AF37', '#147BFF', '#FFE8A3'];
+      for (let p = 0; p < 280; p++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 4 + Math.random() * 26;
+        const speed = 5 + Math.random() * 24;
         particlesRef.current.push({
           x: ox,
           y: oy,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          size: 2.5 + Math.random() * 5,
-          color: blastColors[Math.floor(Math.random() * blastColors.length)],
+          size: 3 + Math.random() * 4.5,
+          color: blastSparkColors[Math.floor(Math.random() * blastSparkColors.length)],
           alpha: 1.0,
-          decay: 0.008 + Math.random() * 0.015,
+          decay: 0.01 + Math.random() * 0.016,
           sparkle: true,
           history: [],
         });
@@ -166,7 +172,7 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
           particleCount: 160,
           spread: 120,
           origin: { x: origin.x, y: origin.y },
-          colors: ['#42D9FF', '#147BFF', '#7548FF', '#D6B56F', '#FFFFFF'],
+          colors: ['#00E5FF', '#147BFF', '#D4AF37', '#FFE8A3', '#FFFFFF'],
           ticks: 350,
           gravity: 0.6,
           scalar: 1.2,
@@ -179,7 +185,7 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
             angle: 60,
             spread: 80,
             origin: { x: 0.1, y: 0.8 },
-            colors: ['#42D9FF', '#7548FF', '#D6B56F', '#FFFFFF'],
+            colors: ['#00E5FF', '#D4AF37', '#FFFFFF'],
             ticks: 300,
           });
           confetti({
@@ -187,7 +193,7 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
             angle: 120,
             spread: 80,
             origin: { x: 0.9, y: 0.8 },
-            colors: ['#42D9FF', '#7548FF', '#D6B56F', '#FFFFFF'],
+            colors: ['#00E5FF', '#D4AF37', '#FFFFFF'],
             ticks: 300,
           });
         }, 500);
@@ -221,14 +227,14 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
       // 1. Render Contact Flash Bloom (Phase C)
       if (contactFlashIntensity.current > 0.01) {
         contactFlashIntensity.current *= 0.92;
-        const grad = ctx.createRadialGradient(ox, oy, 10, ox, oy, 320);
-        grad.addColorStop(0, `rgba(255, 255, 255, ${contactFlashIntensity.current})`);
-        grad.addColorStop(0.3, `rgba(234, 210, 154, ${contactFlashIntensity.current * 0.8})`);
-        grad.addColorStop(0.7, `rgba(217, 165, 46, ${contactFlashIntensity.current * 0.4})`);
+        const grad = ctx.createRadialGradient(ox, oy, 15, ox, oy, 340);
+        grad.addColorStop(0, `rgba(255, 255, 255, ${contactFlashIntensity.current * 0.95})`);
+        grad.addColorStop(0.25, `rgba(212, 175, 55, ${contactFlashIntensity.current * 0.75})`);
+        grad.addColorStop(0.65, `rgba(0, 229, 255, ${contactFlashIntensity.current * 0.35})`);
         grad.addColorStop(1, 'rgba(6, 23, 47, 0)');
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(ox, oy, 320, 0, Math.PI * 2);
+        ctx.arc(ox, oy, 340, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -237,15 +243,48 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
         blastFlashIntensity.current *= 0.94;
         const blastRadius = Math.max(canvas.width, canvas.height) * 0.9;
         const grad = ctx.createRadialGradient(ox, oy, 30, ox, oy, blastRadius);
-        grad.addColorStop(0, `rgba(255, 255, 255, ${blastFlashIntensity.current * 0.95})`);
-        grad.addColorStop(0.2, `rgba(234, 210, 154, ${blastFlashIntensity.current * 0.7})`);
-        grad.addColorStop(0.6, `rgba(217, 165, 46, ${blastFlashIntensity.current * 0.3})`);
+        grad.addColorStop(0, `rgba(255, 255, 255, ${blastFlashIntensity.current * 0.98})`);
+        grad.addColorStop(0.2, `rgba(255, 232, 163, ${blastFlashIntensity.current * 0.8})`);
+        grad.addColorStop(0.55, `rgba(212, 175, 55, ${blastFlashIntensity.current * 0.4})`);
+        grad.addColorStop(0.8, `rgba(0, 229, 255, ${blastFlashIntensity.current * 0.2})`);
         grad.addColorStop(1, 'rgba(3, 11, 23, 0)');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
 
-      // 3. Render Shockwaves
+      // 3. Render Solid Quantum Core Pulses
+      for (let c = corePulsesRef.current.length - 1; c >= 0; c--) {
+        const pulse = corePulsesRef.current[c];
+        pulse.radius += pulse.growthSpeed;
+        pulse.alpha -= pulse.decaySpeed;
+
+        if (pulse.alpha <= 0.01 || pulse.radius >= pulse.maxRadius) {
+          corePulsesRef.current.splice(c, 1);
+          continue;
+        }
+
+        ctx.save();
+        // Solid core disk with high density
+        const coreGrad = ctx.createRadialGradient(ox, oy, 5, ox, oy, pulse.radius);
+        coreGrad.addColorStop(0, `rgba(255, 255, 255, ${pulse.alpha})`);
+        coreGrad.addColorStop(0.45, `rgba(0, 229, 255, ${pulse.alpha * 0.8})`);
+        coreGrad.addColorStop(0.85, `rgba(212, 175, 55, ${pulse.alpha * 0.5})`);
+        coreGrad.addColorStop(1, 'rgba(0, 229, 255, 0)');
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(ox, oy, pulse.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Solid perimeter ring
+        ctx.strokeStyle = `rgba(212, 175, 55, ${pulse.alpha})`;
+        ctx.lineWidth = 4;
+        ctx.shadowColor = '#00E5FF';
+        ctx.shadowBlur = 24;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 4. Render Bold Concentric Harmonic Shockwaves
       for (let i = shockwavesRef.current.length - 1; i >= 0; i--) {
         const sw = shockwavesRef.current[i];
         sw.radius += sw.speed;
@@ -262,47 +301,22 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
         ctx.strokeStyle = sw.color;
         ctx.globalAlpha = sw.alpha;
         ctx.lineWidth = sw.lineWidth;
-        ctx.shadowColor = sw.color;
-        ctx.shadowBlur = 18;
+        ctx.shadowColor = sw.glowColor;
+        ctx.shadowBlur = 28;
         ctx.stroke();
         ctx.restore();
       }
 
-      // 4. Render Electric Blue Filaments (Phase C)
-      for (let f = filamentsRef.current.length - 1; f >= 0; f--) {
-        const fil = filamentsRef.current[f];
-        fil.alpha -= 0.035;
-
-        if (fil.alpha <= 0.01) {
-          filamentsRef.current.splice(f, 1);
-          continue;
-        }
-
-        ctx.save();
-        ctx.beginPath();
-        fil.points.forEach((pt, idx) => {
-          if (idx === 0) ctx.moveTo(pt.x, pt.y);
-          else ctx.lineTo(pt.x, pt.y);
-        });
-        ctx.strokeStyle = fil.color;
-        ctx.globalAlpha = fil.alpha;
-        ctx.lineWidth = 2.5;
-        ctx.shadowColor = fil.color;
-        ctx.shadowBlur = 12;
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // 5. Render Burst Particles & Trails
+      // 5. Render Burst Particles & Trails (Strictly solid, clean golden-cyan sparks)
       for (let p = particlesRef.current.length - 1; p >= 0; p--) {
         const part = particlesRef.current[p];
         part.history.push({ x: part.x, y: part.y });
-        if (part.history.length > 6) part.history.shift();
+        if (part.history.length > 5) part.history.shift();
 
         part.x += part.vx;
         part.y += part.vy;
-        part.vx *= 0.96; // air resistance
-        part.vy *= 0.96;
+        part.vx *= 0.95; // air resistance
+        part.vy *= 0.95;
         part.alpha -= part.decay;
 
         if (part.alpha <= 0.01) {
@@ -320,8 +334,10 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
             ctx.lineTo(part.history[h].x, part.history[h].y);
           }
           ctx.strokeStyle = part.color;
-          ctx.globalAlpha = part.alpha * 0.4;
-          ctx.lineWidth = part.size * 0.6;
+          ctx.globalAlpha = part.alpha * 0.5;
+          ctx.lineWidth = part.size * 0.7;
+          ctx.shadowColor = part.color;
+          ctx.shadowBlur = 12;
           ctx.stroke();
         }
 
@@ -329,9 +345,9 @@ export const EnergyBlastVFX: React.FC<EnergyBlastVFXProps> = ({
         ctx.beginPath();
         ctx.arc(part.x, part.y, part.size, 0, Math.PI * 2);
         ctx.fillStyle = part.color;
-        ctx.globalAlpha = part.sparkle && Math.random() > 0.3 ? part.alpha : part.alpha * 0.8;
+        ctx.globalAlpha = part.sparkle && Math.random() > 0.3 ? part.alpha : part.alpha * 0.85;
         ctx.shadowColor = part.color;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 14;
         ctx.fill();
         ctx.restore();
       }

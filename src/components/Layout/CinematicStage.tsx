@@ -217,8 +217,8 @@ export const CinematicStage: React.FC<CinematicStageProps> = ({
         }
       />
 
-      {/* Visual Effects Blast Engine */}
-      <EnergyBlastVFX phase={phase} />
+      {/* Visual Effects Blast Engine (Bold, Solid & Unique Quantum Ignition) */}
+      <EnergyBlastVFX phase={phase} origin={{ x: 0.5, y: 0.526 }} />
 
       {/* Cinematic Dual-Channel Video Player with Broadcast Transitions */}
       <CinematicVideoPlayer
@@ -276,21 +276,75 @@ export const CinematicStage: React.FC<CinematicStageProps> = ({
             className="absolute left-1/2 top-[52.6%] -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full cursor-pointer z-30 opacity-0"
           />
 
-          {/* Dynamic Biometric Charging Flare & Ring when palm is actively aligning */}
-          {trackingState.holdProgress > 0 && (
-            <div className="absolute left-1/2 top-[52.6%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30 transition-all duration-75 flex items-center justify-center">
+          {/* Bold & Solid Biometric Charging Flare & Precision Radial Gauge */}
+          {(trackingState.holdProgress > 0 || phase === 'PHASE_C_CONTACT') && (
+            <div className="absolute left-1/2 top-[52.6%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30 transition-all duration-150 flex items-center justify-center">
+              {/* Precision SVG Circular Gauge */}
+              <svg className="w-44 h-44 -rotate-90 pointer-events-none overflow-visible">
+                <defs>
+                  <linearGradient id="gaugeGoldCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#00E5FF" />
+                    <stop offset="50%" stopColor="#147BFF" />
+                    <stop offset="100%" stopColor="#D4AF37" />
+                  </linearGradient>
+                  <filter id="gaugeGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                {/* Background Ring Track */}
+                <circle
+                  cx="88"
+                  cy="88"
+                  r="68"
+                  className="stroke-cyan-500/25 fill-none"
+                  strokeWidth="3.5"
+                />
+                {/* Active Progress Arc */}
+                <circle
+                  cx="88"
+                  cy="88"
+                  r="68"
+                  fill="none"
+                  stroke="url(#gaugeGoldCyan)"
+                  strokeWidth={phase === 'PHASE_C_CONTACT' ? 7 : 5}
+                  strokeLinecap="round"
+                  filter="url(#gaugeGlow)"
+                  strokeDasharray={427.26}
+                  strokeDashoffset={
+                    phase === 'PHASE_C_CONTACT'
+                      ? 0
+                      : 427.26 * (1 - Math.min(1, trackingState.holdProgress))
+                  }
+                  className="transition-all duration-75"
+                />
+              </svg>
+
+              {/* Bold Outer Rotating Precision Ring */}
               <div
-                className="w-36 h-36 rounded-full border-4 border-[#D6B56F] shadow-[0_0_35px_#42D9FF,0_0_70px_#D6B56F] animate-spin"
+                className={`absolute w-40 h-40 rounded-full border-2 ${
+                  phase === 'PHASE_C_CONTACT'
+                    ? 'border-[#D4AF37] shadow-[0_0_40px_#00E5FF,0_0_80px_#D4AF37] scale-110'
+                    : 'border-[#00E5FF]/50 border-dashed animate-spin'
+                } transition-transform duration-150`}
                 style={{
-                  transform: `scale(${1 + trackingState.holdProgress * 0.2})`,
-                  opacity: 0.5 + trackingState.holdProgress * 0.5,
+                  opacity: phase === 'PHASE_C_CONTACT' ? 1 : 0.4 + trackingState.holdProgress * 0.6,
                 }}
               />
+
+              {/* Solid Quantum Core Light */}
               <div
-                className="absolute w-20 h-20 rounded-full bg-gradient-to-r from-[#42D9FF] to-[#D6B56F] blur-md animate-pulse"
+                className={`absolute rounded-full transition-all duration-150 ${
+                  phase === 'PHASE_C_CONTACT'
+                    ? 'w-24 h-24 bg-white/95 shadow-[0_0_50px_#FFFFFF,0_0_80px_#00E5FF,0_0_120px_#D4AF37] scale-125'
+                    : 'w-16 h-16 bg-gradient-to-r from-[#00E5FF] to-[#D4AF37] blur-sm animate-pulse'
+                }`}
                 style={{
-                  transform: `scale(${1 + trackingState.holdProgress * 0.5})`,
-                  opacity: trackingState.holdProgress * 0.8,
+                  opacity: phase === 'PHASE_C_CONTACT' ? 1 : trackingState.holdProgress * 0.85,
+                  transform: phase === 'PHASE_C_CONTACT' ? 'scale(1.25)' : `scale(${0.8 + trackingState.holdProgress * 0.4})`,
                 }}
               />
             </div>
